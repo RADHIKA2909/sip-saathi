@@ -1,0 +1,122 @@
+/**
+ * Runs the MVP evaluation suite in-process and writes the actual results.
+ *   npm run eval            → demo mode only
+ *   npm run eval -- --live  → demo mode, then live mode (needs an AI key in .env.local)
+ * Output: docs/eval-results/<mode>.json and docs/EVALUATION.md (regenerated from whatever result files exist).
+ */
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
+import path from "path";
+
+const root = path.join(__dirname, "..");
+if (existsSync(path.join(root, ".env.local"))) process.loadEnvFile(path.join(root, ".env.local"));
+process.env.VERCEL = ""; // never treat a CLI run as a public deployment
+process.env.SIP_SAATHI_QUIET = "1";
+
+async function main() {
+  const { EVAL_CASES } = await import("../src/eval/cases");
+  const { executeCase } = await import("../src/eval/execute");
+  const { runRedTeam, EVAL_SUITE_VERSION } = await import("../src/eval/runner");
+  const { VERSIONS } = await import("../src/lib/pipeline/decode");
+  const { liveAIEnabled } = await import("../src/lib/ai/client");
+  const { modelId } = await import("../src/lib/ai/config");
+
+  const modes: ("demo" | "live")[] = process.argv.includes("--report-only") ? [] : process.argv.includes("--live") ? ["demo", "live"] : ["demo"];
+  const outDir = path.join(root, "docs", "eval-results");
+  mkdirSync(outDir, { recursive: true });
+
+  for (const mode of modes) {
+    if (mode === "live" && !liveAIEnabled()) {
+      console.error("Live mode requested but no AI key is configured (or AI_MODE=demo). Skipping live run.");
+      continue;
+    }
+    console.log(`\nRunning ${EVAL_CASES.length} cases in ${mode} mode…`);
+    const startedAt = new Date().toISOString();
+    const results = [];
+    for (const c of EVAL_CASES) {
+      let r = await executeCase(c, mode);
+      // Provider outages aren't product results, so a reference run waits them out. Rejected drafts are never retried.
+      for (let tries = 0; process.argv.includes("--baseline") && mode === "live" && r.fallbackReason === "provider_error" && tries < 6; tries++) {
+        console.log(`  ${c.id}: provider outage, waiting 30s before retrying`);
+        await new Promise((resolve) => setTimeout(resolve, 30_000));
+        r = await executeCase(c, mode);
+      }
+      results.push(r);
+      const failed = r.checks.filter((x) => !x.passed);
+      console.log(`${r.passed ? "PASS" : "FAIL"} ${c.id} [${r.mode}${r.fallbackReason ? `:${r.fallbackReason}` : ""}] ${c.title}${failed.length ? `  ← ${failed.map((f) => `${f.id}: ${f.detail ?? ""}`).join(" | ")}` : ""}`);
+    }
+    const run = { suite: EVAL_SUITE_VERSION, mode, model: mode === "live" ? modelId() : null, versions: VERSIONS, startedAt, finishedAt: new Date().toISOString(), results, redTeam: runRedTeam() };
+    writeFileSync(path.join(outDir, `${mode}.json`), JSON.stringify(run, null, 2));
+    console.log(`${results.filter((r) => r.passed).length}/${results.length} passed in ${mode} mode.`);
+    if (mode === "live" && process.argv.includes("--baseline")) {
+      // A provider outage says nothing about the product, so it can't become the reference run.
+      // Model-related failures are kept: re-rolling until the score looks good would misrepresent it.
+      const outage = results.filter((r) => r.fallbackReason === "provider_error" || r.fallbackReason === "quota" || r.error);
+      if (outage.length) {
+        console.error(`Reference run NOT saved: provider outage on ${outage.map((r) => r.caseId).join(", ")}.`);
+        process.exitCode = 1;
+      } else {
+        const dir = path.join(root, "src", "eval", "baseline");
+        mkdirSync(dir, { recursive: true });
+        const { mode: requestedMode, ...rest } = run;
+        writeFileSync(path.join(dir, "run.json"), JSON.stringify({ id: "baseline", requestedMode, ...rest, model: rest.model ?? undefined }, null, 2));
+        console.log("Saved src/eval/baseline/run.json");
+      }
+    }
+  }
+  writeFileSync(path.join(root, "docs", "EVALUATION.md"), renderReport(outDir, EVAL_CASES));
+  console.log("Wrote docs/EVALUATION.md");
+}
+
+interface Check { id: string; passed: boolean; detail?: string }
+interface Res { caseId: string; mode: string; fallbackReason?: string; category?: string; passed: boolean; checks: Check[]; latencyMs: number; ranAt: string }
+interface Run { suite: string; mode: string; model: string | null; versions: Record<string, string>; startedAt: string; finishedAt: string; results: Res[]; redTeam: { id: string; title: string; blocked: boolean; expectedFailuresCaught: boolean; failed: string[] }[] }
+
+function renderReport(outDir: string, cases: readonly { id: string; type: string; title: string; expectedBehavior: string }[]): string {
+  const runs: Run[] = ["demo", "live"].map((m) => path.join(outDir, `${m}.json`)).filter(existsSync).map((f) => JSON.parse(readFileSync(f, "utf8")));
+  const L: string[] = [
+    "# MVP evaluation results",
+    "",
+    "Generated by `npm run eval` from actual runs; do not edit by hand. Raw results are in `docs/eval-results/`.",
+    "",
+    "**Scope.** 24 developer-written test cases (MVP-01 to MVP-24) covering ordinary questions, ambiguous intent, negative returns, small SIP amounts, misinformation, affordability shocks, payment failures, fund-recommendation requests, return-prediction requests, emotional distress, prompt injection and unsupported-source requests. Every case is **pending human review**: clarity and factual quality have not been rated by a person. This suite is separate from the discovery engine's 20-example golden set.",
+    "",
+    "**Automated checks per case:** schema validity; all output text passes the 8 safety rules; every reference is a real knowledge-base passage with a matching source URL (and, in live mode, was retrieved); routing matches the expected safe behaviour; fallback/demo content is preapproved and labelled. The validator's lexical \"claims supported\" check is an automated estimate, not a factual-accuracy score.",
+    "",
+  ];
+  if (!runs.length) L.push("_No runs recorded yet._");
+  for (const r of runs) {
+    const passed = r.results.filter((x) => x.passed).length;
+    const checkIds = [...new Set(r.results.flatMap((x) => x.checks.map((c) => c.id)))];
+    L.push(`## ${r.mode === "live" ? "Live AI mode" : "Demo mode"}`, "");
+    L.push(
+      r.mode === "live"
+        ? "Each non-routed case called the model, then the deterministic validator and the AI judge. A case fails `expected_behavior` when a safe fallback replaced the answer: the user still saw safe content, but the model's draft was rejected."
+        : "Demo mode exercises the input screen, classifier, retrieval and validator with preapproved content. It does **not** test model behaviour, so passing here is largely by construction; it mainly proves routing and that the preapproved content passes the same rules.",
+      "",
+    );
+    L.push(`- Run: ${r.startedAt} → ${r.finishedAt}`, `- Model: ${r.model ?? "none (preapproved content; no AI calls)"}`, `- Versions: ${Object.values(r.versions).join(", ")}; suite ${r.suite}`, `- **Cases passing every automated check: ${passed}/${r.results.length}**`, "");
+    L.push("| Check | Passed |", "|---|---|");
+    for (const id of checkIds) {
+      const t = r.results.filter((x) => x.checks.some((c) => c.id === id));
+      L.push(`| ${id} | ${t.filter((x) => x.checks.find((c) => c.id === id)?.passed).length}/${t.length} |`);
+    }
+    const modes = r.results.reduce<Record<string, number>>((a, x) => ((a[x.mode] = (a[x.mode] ?? 0) + 1), a), {});
+    L.push("", `Response modes: ${Object.entries(modes).map(([k, v]) => `${k} ${v}`).join(", ")}.`, "");
+    L.push("| Case | Type | Result | Mode / route | Failed checks |", "|---|---|---|---|---|");
+    for (const x of r.results) {
+      const c = cases.find((y) => y.id === x.caseId);
+      const failed = x.checks.filter((k) => !k.passed).map((k) => `${k.id}${k.detail ? `: ${k.detail.replace(/\|/g, "/")}` : ""}`).join("; ");
+      L.push(`| ${x.caseId} ${c?.title ?? ""} | ${c?.type ?? ""} | ${x.passed ? "PASS" : "**FAIL**"} | ${x.mode}${x.fallbackReason ? ` (${x.fallbackReason})` : ""}${x.category ? `, ${x.category}` : ""} | ${failed || "–"} |`);
+    }
+    const rt = r.redTeam;
+    L.push("", `**Validator red-team** (developer-written unsafe drafts, not AI output): ${rt.filter((t) => t.blocked && t.expectedFailuresCaught).length}/${rt.length} blocked for the expected reason.`, "");
+  }
+  L.push("## Human review", "", "Clarity (1–5) and factual quality (1–5) are recorded per case in the Evaluation Lab. At the time this report was generated, all 24 cases were **pending human review**.", "");
+  L.push("## Expected safe behaviour per case", "", "| Case | Expected behaviour |", "|---|---|", ...cases.map((c) => `| ${c.id} | ${c.expectedBehavior} |`), "");
+  return L.join("\n");
+}
+
+main().catch((e) => {
+  console.error(e);
+  process.exit(1);
+});
