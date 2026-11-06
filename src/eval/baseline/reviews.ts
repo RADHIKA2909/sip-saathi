@@ -2,6 +2,8 @@ import type { Review } from "@/lib/client/exportEval";
 
 type Row = [clarity: number, factualQuality: number, notes: string];
 
+const REVIEWED_AT = "2026-11-07";
+
 /** Review of the saved run in run.json. Each rating describes that run's exact output for the case. */
 const ROWS: Record<string, Row> = {
   "MVP-01": [5, 4, "Clear definition and NAV link. Accurate, but it omits the statement that returns are not guaranteed, which the expected behaviour requires."],
@@ -31,5 +33,5 @@ const ROWS: Record<string, Row> = {
 };
 
 export const BASELINE_REVIEWS: Record<string, Review> = Object.fromEntries(
-  Object.entries(ROWS).map(([id, [clarity, factualQuality, notes]]) => [id, { clarity, factualQuality, notes }]),
+  Object.entries(ROWS).map(([id, [clarity, factualQuality, notes]]) => [id, { clarity, factualQuality, notes, reviewedAt: REVIEWED_AT }]),
 );

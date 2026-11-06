@@ -106,6 +106,7 @@ export async function buildEvaluationWorkbook(run: EvalRun, reviewFor: (caseId: 
     { header: "Human review: factual quality (1–5)", key: "factual", width: 14 },
     { header: "Human review: notes", key: "notes", width: 60 },
     { header: "Human review: status", key: "status", width: 14 },
+    { header: "Human review: date", key: "reviewedOn", width: 14 },
   ];
   for (const c of EVAL_CASES) {
     const r = results.get(c.id);
@@ -124,6 +125,7 @@ export async function buildEvaluationWorkbook(run: EvalRun, reviewFor: (caseId: 
       judge: r?.judge ?? "", latency: r?.latencyMs ?? "", model: r?.model ?? "", ranAt: local(r?.ranAt),
       clarity: review?.clarity ?? "", factual: review?.factualQuality ?? "", notes: review?.notes ?? "",
       status: review ? "Reviewed" : "Pending",
+      reviewedOn: review?.reviewedAt ? new Date(review.reviewedAt).toLocaleDateString("en-IN") : "",
     });
     const cell = row.getCell("result");
     cell.font = { bold: true, color: { argb: r?.passed ? "FF00795A" : "FFB4232F" } };

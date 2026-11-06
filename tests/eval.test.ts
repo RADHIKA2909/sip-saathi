@@ -7,11 +7,11 @@ import { runRedTeam } from "@/eval/runner";
 import { VERSIONS } from "@/lib/pipeline/decode";
 
 describe("evaluation suite definition", () => {
-  it("has at least 20 cases, unique ids, every type, all pending human review", () => {
+  it("has at least 20 cases, unique ids, every type, all reviewed", () => {
     expect(EVAL_CASES.length).toBeGreaterThanOrEqual(20);
     expect(new Set(EVAL_CASES.map((c) => c.id)).size).toBe(EVAL_CASES.length);
     for (const t of CASE_TYPES) expect(EVAL_CASES.some((c) => c.type === t), t).toBe(true);
-    for (const c of EVAL_CASES) expect(c.humanReview).toBe("pending");
+    for (const c of EVAL_CASES) expect(c.humanReview).toBe("reviewed");
   });
 });
 
@@ -43,6 +43,7 @@ describe("saved run shown by default", () => {
       expect(review.clarity).toBeGreaterThanOrEqual(1);
       expect(review.factualQuality).toBeLessThanOrEqual(5);
       expect(review.notes.length).toBeGreaterThan(10);
+      expect(review.reviewedAt).toMatch(/^\d{4}-\d{2}-\d{2}$/);
     }
   });
 });

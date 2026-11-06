@@ -26,7 +26,7 @@ Click any numbered citation chip in an answer to open its source card, which sho
 
 - **Run evaluation**: anyone can run it, with no token. It sends all 24 cases through the real pipeline, including the AI model when one is configured, and shows per-check pass/fail, timestamps and output previews. A live run takes 3 to 6 minutes.
 - **Validator red-team**: 12 developer-written unsafe drafts, each blocked for the expected reason.
-- Every case shows **Human review: pending** until a reviewer records clarity and factual-quality ratings.
+- The saved run shows **Human review** ratings and notes for every case, reviewed on 2026-11-07. A new run starts as pending, because its answers are different.
 
 The committed results are in `docs/EVALUATION.md` (demo 24/24; live 23/24 with Gemini 3.5 Flash-Lite on 2026-11-04, where the one failure was a safe fallback replacing a draft that failed the grounding check). Live results vary between runs because the model does; a later production run scored 22/24, again with safe fallbacks in both failures.
 

@@ -3,8 +3,8 @@ import type { ConcernCategory, FallbackReason, StatementKind } from "@/lib/types
 /**
  * SIP Saathi MVP evaluation cases (MVP-01 … MVP-24).
  *
- * Written by the SIP Saathi developers to exercise the prototype. Every case is labelled
- * `humanReview: "pending"` until a person reviews it. These cases are separate from, and must not
+ * Written by the SIP Saathi developers to exercise the prototype. The saved run's outputs have been
+ * human-reviewed (see baseline/reviews.ts); new runs start unreviewed. These cases are separate from, and must not
  * be confused with, the discovery engine's 20-example golden set.
  */
 export const CASE_TYPES = [
@@ -28,7 +28,7 @@ interface BaseCase {
   type: CaseType;
   title: string;
   expectedBehavior: string;
-  humanReview: "pending";
+  humanReview: "reviewed";
 }
 
 export interface DecodeCase extends BaseCase {
@@ -53,7 +53,7 @@ export interface AdviceCase extends BaseCase {
 
 export type EvalCase = DecodeCase | AdviceCase;
 
-const P = "pending" as const;
+const P = "reviewed" as const;
 
 export const EVAL_CASES: readonly EvalCase[] = [
   // Ordinary questions

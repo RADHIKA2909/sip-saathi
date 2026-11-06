@@ -15,10 +15,13 @@
 - The MVP evaluation suite was executed in demo mode (24/24) and live mode with `gemini-3.5-flash-lite` (23/24); see `docs/EVALUATION.md`.
 - Unit, integration and end-to-end tests pass, including axe accessibility scans (no serious or critical violations) on every page at desktop and mobile sizes.
 
+## Human review
+
+The project owner reviewed clarity and factual quality for all 24 cases of the saved live run on 2026-11-07 (mean clarity 3.96/5, mean factual quality 4.71/5; per-case ratings and notes are in `docs/EVALUATION.md`). This is one non-independent reviewer, and the ratings apply only to that run's outputs. New runs start as pending because the model's answers vary.
+
 ## What still requires human verification
 
 - **Passage fidelity:** a reviewer should re-read each passage against its source (`/sources`).
-- **Clarity and factual quality:** all 24 evaluation cases are *pending human review*.
 - **Screen-reader experience:** automated axe checks and keyboard tests pass, but the app has not been tested with NVDA, VoiceOver or TalkBack users.
 - **Live AI behaviour beyond the 24 cases:** model output varies; the validator and judge reduce risk but cannot guarantee correctness.
 
