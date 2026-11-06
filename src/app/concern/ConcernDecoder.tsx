@@ -1,14 +1,16 @@
 "use client";
 import { useRef, useState } from "react";
-import { TrendingDown, Coins, MessagesSquare, CreditCard, Wallet, AlertCircle, Send } from "lucide-react";
+import { Activity, TrendingDown, Coins, MessagesSquare, CreditCard, Wallet, AlertCircle, Send } from "lucide-react";
 import { DecodeResultView, ResultSkeleton } from "@/components/DecodeResultView";
 import { Button, Callout, PageHeader, cx } from "@/components/ui";
 import { track } from "@/lib/analytics/client";
 import { api } from "@/lib/client/api";
 import { SESSION_KEYS, writeSession } from "@/lib/client/session";
+import { CANVAS_EXAMPLE } from "@/lib/scenarios";
 import type { ConcernCategory, DecodeResult } from "@/lib/types";
 
 const CHIPS: { id: ConcernCategory; label: string; icon: typeof TrendingDown; prompt: string }[] = [
+  { id: "negative_returns", label: "I can't tell how my SIP is progressing", icon: Activity, prompt: CANVAS_EXAMPLE },
   { id: "negative_returns", label: "My SIP shows negative returns", icon: TrendingDown, prompt: "My SIP shows negative returns. What does that mean?" },
   { id: "small_contributions", label: "My contribution feels too small", icon: Coins, prompt: "My monthly SIP amount feels too small to matter." },
   { id: "conflicting_information", label: "I keep hearing conflicting advice", icon: MessagesSquare, prompt: "I keep hearing conflicting advice about SIPs and don't know what to believe." },
@@ -60,9 +62,9 @@ export function ConcernDecoder() {
           <div className="grid gap-2">
             {CHIPS.map((c) => {
               const Icon = c.icon;
-              const on = chip === c.id;
+              const on = chip === c.id && text === c.prompt;
               return (
-                <button key={c.id} type="button" aria-pressed={on} disabled={loading}
+                <button key={c.prompt} type="button" aria-pressed={on} disabled={loading}
                   onClick={() => { setChip(c.id); setText(c.prompt); void submit(c.id, c.prompt); }}
                   className={cx("flex min-h-12 items-center gap-3 rounded-xl border px-4 py-3 text-left text-sm font-medium transition-colors",
                     on ? "border-accent-strong bg-accent-soft text-accent-strong" : "border-border bg-surface hover:border-border-strong hover:bg-surface-2")}>

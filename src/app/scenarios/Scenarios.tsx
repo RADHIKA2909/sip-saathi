@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AlertCircle, ArrowRight, CheckCircle2, Play, ShieldAlert, Timer, XCircle } from "lucide-react";
 import { DecodeResultView, ResultSkeleton } from "@/components/DecodeResultView";
 import { Badge, Button, Callout, Card, PageHeader, cx } from "@/components/ui";
@@ -58,9 +58,18 @@ function ScenarioRunner({ s }: { s: Scenario }) {
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
   const timer = useTimer(!done);
+  // Follow-ups render below a long answer, so bring them into view or the button seems to do nothing.
+  const followRef = useRef<HTMLDivElement>(null);
+  const [followClicks, setFollowClicks] = useState(0);
+  useEffect(() => {
+    if (!followClicks) return;
+    followRef.current?.scrollIntoView({ block: "start" });
+    followRef.current?.focus({ preventScroll: true });
+  }, [followClicks]);
 
   async function run(which: "main" | "follow") {
     if (which === "main") timer.begin();
+    else setFollowClicks((n) => n + 1);
     setLoading(which);
     setError(null);
     try {
@@ -114,14 +123,16 @@ function ScenarioRunner({ s }: { s: Scenario }) {
         {error && <Callout tone="danger" icon={<AlertCircle size={18} aria-hidden />} title="Couldn't run the scenario">{error} <button type="button" className="font-semibold underline" onClick={() => void run(main ? "follow" : "main")}>Try again</button></Callout>}
         {loading === "main" && <ResultSkeleton />}
         {main && loading !== "main" && <DecodeResultView result={main} compact showFeedback={false} />}
-        {loading === "follow" && <ResultSkeleton />}
-        {follow && (
-          <section aria-labelledby="fu-h" className="space-y-3">
-            <h2 id="fu-h" className="text-sm font-semibold uppercase tracking-wide text-muted">Follow-up result</h2>
-            <DecodeResultView result={follow} compact showFeedback={false} />
-          </section>
-        )}
-        {redteam && <RedTeamDemo />}
+        <div ref={followRef} tabIndex={-1} className="scroll-mt-32 space-y-6 outline-none">
+          {loading === "follow" && <ResultSkeleton />}
+          {follow && (
+            <section aria-labelledby="fu-h" className="space-y-3">
+              <h2 id="fu-h" className="text-sm font-semibold uppercase tracking-wide text-muted">Follow-up result</h2>
+              <DecodeResultView result={follow} compact showFeedback={false} />
+            </section>
+          )}
+          {redteam && <RedTeamDemo />}
+        </div>
         {done && (
           <Card className="animate-rise">
             <p className="flex items-center gap-2 font-semibold"><CheckCircle2 size={18} className="text-accent-strong" aria-hidden /> Scenario {s.id} complete</p>

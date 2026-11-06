@@ -31,7 +31,8 @@ export function JourneyMirror() {
   useEffect(() => {
     if (result?.ok && input) {
       track("progress_explored", { dataset });
-      writeSession<StoredJourney>(SESSION_KEYS.journey, { dataset, input });
+      // Browsing the demo tab must not replace a journey already on the Canvas.
+      if (dataset === "manual" || !readSession(SESSION_KEYS.journey)) writeSession<StoredJourney>(SESSION_KEYS.journey, { dataset, input });
     }
   }, [result, input, dataset]);
 

@@ -20,7 +20,7 @@ async function post<T>(url: string, body: unknown, headers: Record<string, strin
 }
 
 export const api = {
-  decode: (b: { text?: string; category?: ConcernCategory; scenarioId?: "A" | "A-unsafe" | "B" | "C" }) => post<DecodeResult>("/api/decode", b),
+  decode: (b: { text?: string; category?: ConcernCategory; scenarioId?: "A" | "A-unsafe" | "B" | "C" | "E" }) => post<DecodeResult>("/api/decode", b),
   advice: (statements: string[]) => post<AdviceResult>("/api/advice", { statements }),
   post,
 };

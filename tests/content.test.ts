@@ -55,6 +55,7 @@ describe("classifier and retrieval", () => {
     ["I lost my job and can't afford the SIP", "affordability"],
     ["Should I put money in bitcoin instead?", "out_of_scope"],
     ["hello", "general_knowledge"],
+    ["My SIP has been running for six months, but market fluctuations make it difficult to understand my progress.", "negative_returns"],
   ])("%s → %s", (text, cat) => {
     expect(classify(text).category).toBe(cat);
   });

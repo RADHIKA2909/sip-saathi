@@ -62,9 +62,13 @@ export const SCENARIOS: readonly Scenario[] = [
   },
 ];
 
-export const SCENARIO_TEXT: Record<"A" | "A-unsafe" | "B" | "C", { text: string; category?: ConcernCategory }> = {
+/** Fictional example used to show the Decision Clarity Canvas for an investor already mid-SIP. */
+export const CANVAS_EXAMPLE = "My SIP has been running for six months, but market fluctuations make it difficult to understand my progress.";
+
+export const SCENARIO_TEXT: Record<"A" | "A-unsafe" | "B" | "C" | "E", { text: string; category?: ConcernCategory }> = {
   A: { text: SCENARIOS[0].text, category: "negative_returns" },
   "A-unsafe": { text: SCENARIOS[0].followUp.text },
   B: { text: SCENARIOS[1].text, category: "small_contributions" },
   C: { text: SCENARIOS[2].text, category: "payment_failure" },
+  E: { text: CANVAS_EXAMPLE, category: "negative_returns" },
 };

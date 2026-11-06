@@ -12,7 +12,7 @@ export const CATEGORIES = [
 export type ConcernCategory = (typeof CATEGORIES)[number];
 
 export const CATEGORY_LABEL: Record<ConcernCategory, string> = {
-  negative_returns: "Negative returns",
+  negative_returns: "Market ups and downs",
   small_contributions: "Small contributions",
   conflicting_information: "Conflicting information",
   payment_failure: "Payment failure",
@@ -111,6 +111,8 @@ export interface DecodeResult {
   mode: ResponseMode;
   responseId: string; // id of preapproved content, or "generated"
   category: ConcernCategory;
+  /** The person's words with identifiers removed. Absent for routed messages, so they are never echoed. */
+  concernText?: string;
   intent: string;
   summary: string;
   points: ExplanationPoint[];
@@ -168,7 +170,7 @@ export const GENERATED_JSON_SCHEMA = {
 export const DecodeRequestSchema = z.object({
   text: z.string().trim().max(600).optional().default(""),
   category: z.enum(CATEGORIES).optional(),
-  scenarioId: z.enum(["A", "A-unsafe", "B", "C"]).optional(),
+  scenarioId: z.enum(["A", "A-unsafe", "B", "C", "E"]).optional(),
 });
 export type DecodeRequest = z.input<typeof DecodeRequestSchema>;
 

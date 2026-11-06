@@ -65,8 +65,8 @@ export default function Home() {
         <div>
           <p className="flex items-center gap-2 font-semibold"><FlaskConical size={18} className="text-accent-strong" aria-hidden /> For assessors and mentors</p>
           <p className="mt-1 text-sm leading-relaxed text-muted">
-            The hypothesis behind this prototype is <em>untested</em>: that first-time investors facing volatility, conflicting information or unclear progress may struggle to
-            make informed continuation decisions. The discovery evidence is qualitative (18 public conversations), not representative. Run the evaluation suite or read the limitations.
+            SIP Saathi explores whether clearer, grounded explanations can help first-time investors facing volatility, conflicting information or unclear progress make informed
+            continuation decisions. Its safety and grounding have been evaluated on 24 test cases, and the discovery evidence is qualitative (18 public conversations). See the evaluation results or read the research status.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">

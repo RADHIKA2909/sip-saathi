@@ -17,9 +17,9 @@ export interface PreapprovedResponse {
 export const CATEGORY_RESPONSES: Record<ConcernCategory, PreapprovedResponse> = {
   negative_returns: {
     id: "pre-negative-returns-v1",
-    intent: "Understand why the SIP shows a loss and what that number means.",
+    intent: "Understand how market movements affect the value and progress of a running SIP.",
     summary:
-      "A negative figure usually means the current market value of your units is below the total you have contributed. It describes today's value, and it is not a prediction of what happens next.",
+      "Your SIP's market value moves with the NAV, so it can sit above or below the total you have contributed. A lower figure describes today's value, and it is not a prediction of what happens next.",
     points: [
       {
         text: "Each instalment buys units at that day's NAV. Your market value is the number of units you hold multiplied by the current NAV, so it moves whenever the NAV moves.",

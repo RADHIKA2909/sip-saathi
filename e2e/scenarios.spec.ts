@@ -7,10 +7,11 @@ test.describe("Assessor scenarios (demo mode)", () => {
     await page.goto("/scenarios");
     await page.getByRole("button", { name: /Step 1: Run this scenario/ }).click();
     const main = page.getByRole("tabpanel");
-    await expect(main.getByText("Negative returns", { exact: true }).first()).toBeVisible();
+    await expect(main.getByText("Market ups and downs", { exact: true }).first()).toBeVisible();
     await expect(main.getByText(/Educational demo mode/).first()).toBeVisible();
     await expect(main.getByText(/Mutual Funds Made Simple/).first()).toBeVisible();
     await main.getByRole("button", { name: "Send an unsafe follow-up" }).click();
+    await expect(main.getByText("Follow-up result")).toBeInViewport();
     await expect(main.getByText("Safe preapproved response")).toBeVisible();
     await expect(main.getByText("Asks for a fund or scheme pick")).toBeVisible();
     await expect(main.getByText(/never recommends funds/)).toBeVisible();
@@ -18,7 +19,7 @@ test.describe("Assessor scenarios (demo mode)", () => {
     expect(Date.now() - t0).toBeLessThan(90_000);
   });
 
-  test("B: ₹500 SIP → validator blocks a pressure-based draft", async ({ page }) => {
+  test("B: ₹500 SIP → validator blocks a pressure-based draft @mobile", async ({ page }) => {
     await page.goto("/scenarios");
     await page.getByRole("tab", { name: /₹500 a month/ }).click();
     await page.getByRole("button", { name: /Step 1: Run this scenario/ }).click();
@@ -26,12 +27,12 @@ test.describe("Assessor scenarios (demo mode)", () => {
     await expect(panel.getByText("Small contributions", { exact: true }).first()).toBeVisible();
     await expect(panel.getByText("The same ₹500 SIP in the Journey Mirror")).toBeVisible();
     await panel.getByRole("button", { name: "Show what the output validator blocks" }).click();
-    await expect(panel.getByText("Blocked draft")).toBeVisible();
+    await expect(panel.getByText("Blocked draft")).toBeInViewport();
     await expect(panel.getByText(/No fear, urgency or FOMO nudges/).first()).toBeVisible();
     await expect(panel.getByText(/Result:/)).toContainText("blocked");
   });
 
-  test("C: failed instalment → identifiers removed, no account claims", async ({ page }) => {
+  test("C: failed instalment → identifiers removed, no account claims @mobile", async ({ page }) => {
     await page.goto("/scenarios");
     await page.getByRole("tab", { name: /failed instalment/ }).click();
     await page.getByRole("button", { name: /Step 1: Run this scenario/ }).click();
@@ -40,6 +41,7 @@ test.describe("Assessor scenarios (demo mode)", () => {
     await expect(panel.getByText(/3 consecutive failed instalments/).first()).toBeVisible();
     await panel.getByRole("button", { name: "Try it with an account number" }).click();
     const followUp = page.locator('section[aria-labelledby="fu-h"]');
+    await expect(followUp.getByText("Follow-up result")).toBeInViewport();
     await expect(followUp.getByText("Personal details removed")).toBeVisible();
     // The scripted input shown to the assessor contains the identifiers; the processed result must not.
     await expect(followUp).not.toContainText("123456789012");
@@ -102,6 +104,21 @@ test.describe("Core flow", () => {
     await page.locator("#rq0").fill("A note that stays local");
     await page.getByRole("button", { name: "Mark reflection complete" }).click();
     await expect(page.getByRole("button", { name: "Reflection saved in this tab" })).toBeVisible();
+  });
+
+  test("Canvas example shows a mid-journey investor end to end", async ({ page }) => {
+    await page.goto("/canvas");
+    await page.getByRole("button", { name: "See an example" }).click();
+    await expect(page.getByText(/running for six months/)).toBeVisible();
+    await expect(page.getByText("Market ups and downs")).toBeVisible();
+    await expect(page.getByText("Fictional example")).toBeVisible();
+    await expect(page.getByText(/6 of 6 scheduled instalments/)).toBeVisible();
+    await expect(page.getByText(/compares with what you have contributed/)).toBeVisible();
+    await expect(page.getByText(/how a SIP works/i)).toHaveCount(0);
+    await page.goto("/journey");
+    await expect(page.getByText("₹5,000").first()).toBeVisible();
+    await page.goto("/canvas");
+    await expect(page.getByText(/6 of 6 scheduled instalments/)).toBeVisible();
   });
 
   test("Evaluation Lab opens with a finished, reviewed run and exports it", async ({ page }) => {

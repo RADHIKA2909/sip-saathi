@@ -1,17 +1,19 @@
 "use client";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { CheckCircle2, ClipboardList, HelpCircle, Lightbulb, Printer, Search, Trash2, Compass } from "lucide-react";
+import { AlertCircle, CheckCircle2, ClipboardList, HelpCircle, Lightbulb, Printer, Search, Sparkles, Trash2, Compass } from "lucide-react";
 import { Feedback } from "@/components/Feedback";
 import { Badge, Button, ButtonLink, Callout, Card, PageHeader } from "@/components/ui";
 import { track } from "@/lib/analytics/client";
+import { api } from "@/lib/client/api";
 import { readSession, SESSION_KEYS, writeSession } from "@/lib/client/session";
-import { computeJourney, formatINR } from "@/lib/sip/calc";
+import { CANVAS_EXAMPLE } from "@/lib/scenarios";
+import { computeJourney, EXAMPLE_JOURNEY, formatINR } from "@/lib/sip/calc";
 import { CATEGORY_LABEL, STATEMENT_KIND_LABEL, type AdviceResult, type ConcernCategory, type DecodeResult } from "@/lib/types";
 import type { StoredJourney } from "../journey/JourneyMirror";
 
 const MISSING: Record<ConcernCategory, string[]> = {
-  negative_returns: ["The current value on your own statement", "The risk-o-meter level of your scheme", "When you expect to need this money", "Whether your goal or situation has changed"],
+  negative_returns: ["The current value on your own statement", "How that value compares with what you have contributed so far", "The risk-o-meter level of your scheme", "When you expect to need this money", "Whether your goal or situation has changed"],
   small_contributions: ["The goal this SIP is for, and its rough cost", "Your time horizon for that goal", "How much room your monthly budget has, including for emergencies"],
   conflicting_information: ["Who gave each piece of advice, and whether they are registered", "What each claim is based on", "Whether the advice fits your own goal and horizon"],
   payment_failure: ["The failure reason from your bank or app", "Whether the mandate is active, paused or expired", "How many instalments in a row have failed", "Your provider's confirmation of the SIP's status"],
@@ -27,6 +29,8 @@ export function ClarityCanvas() {
   const [advice, setAdvice] = useState<AdviceResult | null>(null);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [completed, setCompleted] = useState(false);
+  const [loadingExample, setLoadingExample] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     setDecode(readSession<DecodeResult>(SESSION_KEYS.decode));
@@ -42,6 +46,28 @@ export function ClarityCanvas() {
     writeSession(SESSION_KEYS.reflections, next);
   };
 
+  async function loadExample() {
+    setLoadingExample(true);
+    setError(null);
+    try {
+      const r = await api.decode({ scenarioId: "E" });
+      const j: StoredJourney = { dataset: "demo", input: EXAMPLE_JOURNEY };
+      writeSession(SESSION_KEYS.decode, r);
+      writeSession(SESSION_KEYS.journey, j);
+      writeSession(SESSION_KEYS.advice, null);
+      writeSession(SESSION_KEYS.reflections, null);
+      setDecode(r);
+      setJourney(j);
+      setAdvice(null);
+      setAnswers({});
+      setCompleted(false);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Couldn't load the example.");
+    } finally {
+      setLoadingExample(false);
+    }
+  }
+
   if (!ready) return <div className="skeleton h-64 w-full rounded-2xl" role="status" aria-label="Loading canvas" />;
 
   const category = decode?.category;
@@ -53,8 +79,9 @@ export function ClarityCanvas() {
   return (
     <div>
       <PageHeader eyebrow="Decision Clarity Canvas" title="Everything in one place, and the decision stays yours">
-        A summary of what you explored in this tab. It contains no recommendation to continue, pause or stop. It stays in this browser tab and is cleared when you close it.
+        For investors already on their SIP journey: a summary of what you explored in this tab. It contains no recommendation to continue, pause or stop. It stays in this browser tab and is cleared when you close it.
       </PageHeader>
+      {error && <div className="mb-4"><Callout tone="danger" icon={<AlertCircle size={18} aria-hidden />} title="Couldn't load the example">{error}</Callout></div>}
 
       {empty ? (
         <Card className="text-center">
@@ -64,12 +91,14 @@ export function ClarityCanvas() {
           <div className="mt-4 flex flex-wrap justify-center gap-2">
             <ButtonLink href="/concern">Decode a concern</ButtonLink>
             <ButtonLink href="/journey" variant="secondary">Journey Mirror</ButtonLink>
+            <Button variant="ghost" disabled={loadingExample} onClick={() => void loadExample()}><Sparkles size={16} aria-hidden /> {loadingExample ? "Loading…" : "See an example"}</Button>
           </div>
         </Card>
       ) : (
         <div className="space-y-5">
           <div className="no-print flex flex-wrap gap-2">
             <Button variant="secondary" onClick={() => window.print()}><Printer size={16} aria-hidden /> Print or save as PDF</Button>
+            <Button variant="secondary" disabled={loadingExample} onClick={() => void loadExample()}><Sparkles size={16} aria-hidden /> {loadingExample ? "Loading…" : "Load example"}</Button>
             <Button variant="ghost" onClick={() => { Object.values(SESSION_KEYS).forEach((k) => writeSession(k, null)); setDecode(null); setJourney(null); setAdvice(null); setAnswers({}); }}>
               <Trash2 size={16} aria-hidden /> Clear canvas
             </Button>
@@ -80,8 +109,12 @@ export function ClarityCanvas() {
               <h2 className="flex items-center gap-2 font-semibold"><ClipboardList size={18} className="text-accent-strong" aria-hidden /> 1. Your concern</h2>
               {decode ? (
                 <div className="mt-3 space-y-2 text-sm">
-                  <Badge>{CATEGORY_LABEL[decode.category]}</Badge>
-                  <p className="leading-relaxed">{decode.intent}</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    <Badge>{CATEGORY_LABEL[decode.category]}</Badge>
+                    {decode.concernText === CANVAS_EXAMPLE && <Badge tone="warn">Fictional example</Badge>}
+                  </div>
+                  {decode.concernText && <blockquote className="rounded-xl border-l-4 border-accent bg-accent-softer p-3 leading-relaxed">“{decode.concernText}”</blockquote>}
+                  <p className="leading-relaxed text-foreground/85"><span className="font-medium text-foreground">What you want to understand: </span>{decode.intent}</p>
                 </div>
               ) : <p className="mt-3 text-sm text-muted">Not explored yet. <Link className="font-semibold text-accent-strong underline" href="/concern">Decode a concern</Link></p>}
             </Card>
@@ -92,7 +125,7 @@ export function ClarityCanvas() {
                 {jr?.ok && journey && (
                   <li>
                     {journey.dataset === "demo" && <Badge tone="warn" className="mr-1">Demo data</Badge>}
-                    {jr.stats.successfulInstalments} of {jr.stats.scheduledInstalments} scheduled instalments succeeded ({jr.stats.consistencyPct ?? "–"}% consistency); {formatINR(jr.stats.totalContributed)} contributed.
+                    So far, {jr.stats.successfulInstalments} of {jr.stats.scheduledInstalments} scheduled instalments have gone through ({jr.stats.consistencyPct ?? "–"}% consistency), and {formatINR(jr.stats.totalContributed)} has been contributed. This is money put in, not current market value.
                   </li>
                 )}
                 {decode?.points.slice(0, 3).map((p) => <li key={p.text} className="text-foreground/90">{p.text} <span className="text-xs text-muted">(sourced)</span></li>)}

@@ -10,6 +10,8 @@ const KEYWORDS: Record<Exclude<ConcernCategory, "general_knowledge">, [RegExp, n
     [/\b(returns?|portfolio|value|nav|xirr)\b/i, 1],
     [/-\s?\d+(\.\d+)?\s?%/, 3],
     [/\bvolatil(e|ity)\b/i, 2],
+    // Investors already mid-SIP often describe movement or progress rather than a loss.
+    [/\b(fluctuat\w*|ups and downs|market (movements?|swings?)|(my|the) progress|how (my|the) sip is doing)\b/i, 3],
   ],
   small_contributions: [
     [/(₹|rs\.?|inr)\s?(100|250|500|1,?000)\b|\b(100|250|500|1,?000)\s?(rs|rupees?|₹)/i, 3],

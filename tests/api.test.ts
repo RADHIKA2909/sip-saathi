@@ -27,6 +27,15 @@ describe("API routes", () => {
     const unsafe = await (await decode(post("/api/decode", { scenarioId: "A-unsafe" }, "10.2.0.2"))).json();
     expect(unsafe.mode).toBe("fallback");
   });
+  it("returns the masked concern, but never echoes routed messages", async () => {
+    const example = await (await decode(post("/api/decode", { scenarioId: "E" }, "10.5.0.1"))).json();
+    expect(example.category).toBe("negative_returns");
+    expect(example.concernText).toMatch(/running for six months/);
+    const masked = await (await decode(post("/api/decode", { text: "My autopay failed, account 123456789012" }, "10.5.0.2"))).json();
+    expect(masked.concernText).not.toContain("123456789012");
+    const routed = await (await decode(post("/api/decode", { text: "I want to end my life" }, "10.5.0.3"))).json();
+    expect(routed.concernText).toBeUndefined();
+  });
   it("rejects bad input with a helpful 400", async () => {
     expect((await decode(post("/api/decode", "not json"))).status).toBe(400);
     expect((await decode(post("/api/decode", { text: "x".repeat(700) }))).status).toBe(400);

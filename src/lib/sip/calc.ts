@@ -129,6 +129,15 @@ export function formatINR(n: number): string {
   return `₹${n.toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
 }
 
+/** Fictional six-month journey that pairs with the Canvas example concern. */
+export const EXAMPLE_JOURNEY: JourneyInput = {
+  monthlyAmount: 2000,
+  startMonth: "2026-05",
+  successfulInstalments: 6,
+  asOfMonth: "2026-10",
+  includeAsOfMonth: true,
+};
+
 /** Fixed demo journey so the Mirror never needs real data. Clearly labelled as demo in the UI. */
 export const DEMO_JOURNEY: JourneyInput = {
   monthlyAmount: 500,

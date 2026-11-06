@@ -109,6 +109,7 @@ export async function decodeConcern(text: string, hint: ConcernCategory | undefi
 
   const finish = (r: DecodeResult): DecodeResult => {
     r.safety.latencyMs = Date.now() - started;
+    if (!screen.route && screen.masked.trim()) r.concernText = screen.masked.trim();
     void logDiagnostic("decode", {
       mode: r.mode,
       category: r.category,
