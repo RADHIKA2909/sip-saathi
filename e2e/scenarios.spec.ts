@@ -143,6 +143,25 @@ test.describe("Core flow", () => {
     expect(text).not.toMatch(/AI review|reviewed by AI/i);
   });
 
+  test("Anyone can edit and save a review without a token, in their own browser only", async ({ page, browser }) => {
+    await page.goto("/eval");
+    await page.getByRole("button", { name: /MVP-08/ }).click();
+    await expect(page.getByLabel(/token/i)).toHaveCount(0);
+    await expect(page.getByLabel("Clarity (1–5)")).toHaveValue("3");
+    await page.getByLabel("Clarity (1–5)").selectOption("4");
+    await page.getByRole("button", { name: "Save review" }).click();
+    await expect(page.getByText("Saved in this browser.")).toBeVisible();
+    await page.reload();
+    await page.getByRole("button", { name: /MVP-08/ }).click();
+    await expect(page.getByLabel("Clarity (1–5)")).toHaveValue("4");
+    const other = await browser.newContext();
+    const fresh = await other.newPage();
+    await fresh.goto(page.url());
+    await fresh.getByRole("button", { name: /MVP-08/ }).click();
+    await expect(fresh.getByLabel("Clarity (1–5)")).toHaveValue("3");
+    await other.close();
+  });
+
   test("Evaluation Lab can still be run again without a token", async ({ page }) => {
     await page.goto("/eval");
     await page.getByRole("button", { name: "Run evaluation" }).click();

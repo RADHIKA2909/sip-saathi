@@ -168,7 +168,6 @@ export const KEYS = {
   feedback: "feedback:counts",
   evalRuns: "eval:runs",
   evalRun: (id: string) => `eval:run:${id}`,
-  evalReviews: "eval:reviews",
   scenarioCache: (key: string) => `cache:scenario:${key}`,
   rate: (bucket: string) => `rate:${bucket}`,
 } as const;

@@ -6,7 +6,7 @@
  */
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
 import path from "path";
-import { BASELINE_REVIEWS } from "../src/eval/baseline/reviews";
+import { BASELINE_FOLLOWUPS, BASELINE_REVIEWS } from "../src/eval/baseline/reviews";
 
 const root = path.join(__dirname, "..");
 if (existsSync(path.join(root, ".env.local"))) process.loadEnvFile(path.join(root, ".env.local"));
@@ -126,6 +126,12 @@ function renderReport(outDir: string, cases: readonly { id: string; type: string
     "| Case | Clarity | Factual quality | Notes |",
     "|---|---|---|---|",
     ...rows.map(([id, r]) => `| ${id} | ${r.clarity} | ${r.factualQuality} | ${r.notes} |`),
+    "",
+    "### Fixed after this review",
+    "",
+    "The results above keep the run's original answers as the reviewed record. The product has since changed:",
+    "",
+    ...BASELINE_FOLLOWUPS.map((f) => `- ${f}`),
     "",
   );
   L.push("## Expected safe behaviour per case", "", "| Case | Expected behaviour |", "|---|---|", ...cases.map((c) => `| ${c.id} | ${c.expectedBehavior} |`), "");

@@ -23,6 +23,10 @@ describe("output safety rules", () => {
     ["no_live_data_claims", "I checked your mandate and it is active."],
     ["no_personal_identifiers", "Your PAN ABCDE1234F is linked."],
     ["no_guarantees", "SIPs offer benefits like guaranteed returns."],
+    ["no_unfounded_reassurance", "This reflects broader market movements rather than an error in the investment itself."],
+    ["no_unfounded_reassurance", "Nothing is wrong with your SIP."],
+    ["no_unfounded_reassurance", "Don't worry about the fall."],
+    ["no_unfounded_reassurance", "Your investment is safe."],
     ["no_guarantees", "You cannot lose money with a SIP."],
   ];
   it.each(unsafe)("%s blocks: %s", (rule, text) => {
@@ -38,6 +42,8 @@ describe("output safety rules", () => {
     "A monthly SIP is treated as ceased after 3 consecutive failed instalments.",
     "Your consistency so far is 83.3% of scheduled instalments.",
     "You can lose money in market-linked investments.",
+    "SEBI's material describes small SIP amounts as a normal way to invest.",
+    "SIP Saathi cannot say why your specific value moved.",
     "The statement claims a guaranteed outcome that no source supports.",
     "It asserts an assured return, which regulators warn about.",
   ];

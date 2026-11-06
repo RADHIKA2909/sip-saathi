@@ -54,8 +54,7 @@ Without an API key the app runs in **educational demo mode**: every answer is pr
 2. In Vercel, **Add New → Project**, import the repository. The framework is detected as Next.js; no build settings need changing.
 3. Under **Settings → Environment Variables**, add (all server-side, never `NEXT_PUBLIC_`):
    - `GEMINI_API_KEY` for live AI (omit it to deploy in demo mode, or set `AI_MODE=demo`).
-   - `ADMIN_TOKEN`: a long random string. On Vercel, saving human reviews is **disabled unless this is set**. Running the evaluation suite never needs it. Each client can start 6 runs an hour, because a live run makes about 35 model calls against the shared quota.
-   - `RATE_LIMIT_SALT`: any random string.
+   - `RATE_LIMIT_SALT`: any random string. Each client can start 6 evaluation runs an hour, because a live run makes about 35 model calls against the shared quota.
 4. **Recommended:** add the **Upstash Redis** integration from the Vercel Marketplace (Storage tab). It provides `KV_REST_API_URL` / `KV_REST_API_TOKEN`, which the app accepts. Without it, evaluation history, reviews and event counts are held in memory and reset on cold starts (the UI says so).
 5. Deploy. Check `https://<your-app>/api/health`, which reports the mode, model and storage without exposing any secret.
 
@@ -63,7 +62,7 @@ Without an API key the app runs in **educational demo mode**: every answer is pr
 
 ## Architecture in one paragraph
 
-User text → **input screen** (mask identifiers; route distress / prompt injection / fund picks / predictions to preapproved responses) → **rule-based classifier** → **deterministic retrieval** of ≤4 passages from a versioned knowledge base of 9 verified public sources → **structured generation** (Gemini by default; Anthropic optional) constrained to those passages → **deterministic validation** (schema, citations exist and were retrieved, numbers grounded, lexical support estimate, 8 safety rules) → optional **AI judge** that can only block → otherwise a **preapproved fallback**. Every response carries safety metadata (checks, flags, versions, latency) that the UI shows in "What was checked". Details: [`docs/PROMPTS_AND_SAFETY.md`](docs/PROMPTS_AND_SAFETY.md).
+User text → **input screen** (mask identifiers; route distress / prompt injection / fund picks / predictions to preapproved responses) → **rule-based classifier** → **deterministic retrieval** of ≤4 passages from a versioned knowledge base of 9 verified public sources → **structured generation** (Gemini by default; Anthropic optional) constrained to those passages → **deterministic validation** (schema, citations exist and were retrieved, numbers grounded, lexical support estimate, 9 safety rules) → optional **AI judge** that can only block → otherwise a **preapproved fallback**. Every response carries safety metadata (checks, flags, versions, latency) that the UI shows in "What was checked". Details: [`docs/PROMPTS_AND_SAFETY.md`](docs/PROMPTS_AND_SAFETY.md).
 
 ## Documentation
 
@@ -75,4 +74,4 @@ User text → **input screen** (mask identifiers; route distress / prompt inject
 
 ## Configuration reference
 
-See [`.env.example`](.env.example). Key switches: `AI_PROVIDER` (gemini | anthropic), `GEMINI_MODEL` (default `gemini-3.5-flash-lite`), `AI_MODE=demo`, `AI_JUDGE=off`, `ADMIN_TOKEN`, Upstash credentials.
+See [`.env.example`](.env.example). Key switches: `AI_PROVIDER` (gemini | anthropic), `GEMINI_MODEL` (default `gemini-3.5-flash-lite`), `AI_MODE=demo`, `AI_JUDGE=off`, Upstash credentials.

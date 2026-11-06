@@ -5,7 +5,7 @@ import type { CheckResult } from "../types";
  * preapproved, is checked against these. They are intentionally conservative: a false positive
  * only means a safe preapproved response is shown instead.
  */
-export const POLICY_VERSION = "policy-v1";
+export const POLICY_VERSION = "policy-v2";
 
 export interface SafetyRule {
   id: string;
@@ -128,6 +128,21 @@ export const SAFETY_RULES: readonly SafetyRule[] = [
         /\b(cost|costs|costing) you (dearly|lakhs|crores|a fortune)\b/i,
         /\blos(e|ing) out\b/i,
         /\beveryone (else )?is (investing|buying|staying)\b/i,
+      ),
+  },
+  {
+    id: "no_unfounded_reassurance",
+    label: "No reassurance about the person's own investment",
+    description: "SIP Saathi cannot see anyone's investment, so it must not say nothing is wrong, explain why their value moved, or tell them not to worry.",
+    test: (t) =>
+      first(
+        t,
+        /\b(rather than|not|isn't|is not) (an? )?(error|problem|mistake|fault|issue)\b[^.]{0,30}\b(investment|sip|portfolio|fund)\b/i,
+        /\b(nothing|not anything) (is )?(wrong|to worry about)\b/i,
+        /\b(don'?t|do not|no need to) (worry|be worried|be concerned|be scared)\b/i,
+        /\b(this|that|it) is (completely |perfectly |totally |entirely )?(normal|expected|fine)\b/i,
+        /\byour (investment|sip|portfolio|money) (is|are) (safe|fine|okay|ok|on track|doing well)\b/i,
+        /\b(reflects?|is due to|are due to|is caused by|caused by|because of) (the |a )?(broader|overall|general|wider) market\b/i,
       ),
   },
   {

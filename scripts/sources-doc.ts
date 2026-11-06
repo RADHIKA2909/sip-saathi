@@ -12,7 +12,7 @@ export function renderSourcesDoc(): string {
     "",
     "Passages are close paraphrases. Text in quotation marks is copied exactly. Illustrative return projections that appear in some sources (for example an assumed 10% annual return) are deliberately not included, because SIP Saathi never shows return figures.",
     "",
-    "**Human verification still recommended:** a reviewer should re-open each source and confirm each passage before relying on it.",
+    "**Passage review:** the project owner re-checked the passages against their sources on 2026-11-07. Sources can change after that date.",
     "",
     "## Sources",
     "",

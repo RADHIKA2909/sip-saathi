@@ -63,18 +63,13 @@ describe("API routes", () => {
     expect(JSON.stringify(body)).not.toMatch(/AIza|sk-ant|GEMINI_API_KEY|ANTHROPIC_API_KEY/);
     expect(body.mode).toBe("demo");
   });
-  it("POST /api/eval runs a full cycle with no token, even when ADMIN_TOKEN is set", async () => {
-    process.env.ADMIN_TOKEN = "secret";
-    try {
-      const ip = "10.4.0.1";
-      const started = await (await evalPost(post("/api/eval", { action: "start" }, ip))).json();
-      expect(started.mode).toBe("demo");
-      const c = await evalPost(post("/api/eval", { action: "case", runId: started.runId, caseId: "MVP-01" }, ip));
-      expect(c.status).toBe(200);
-      expect((await evalPost(post("/api/eval", { action: "finish", runId: started.runId }, ip))).status).toBe(200);
-    } finally {
-      delete process.env.ADMIN_TOKEN;
-    }
+  it("POST /api/eval runs a full cycle with no credentials", async () => {
+    const ip = "10.4.0.1";
+    const started = await (await evalPost(post("/api/eval", { action: "start" }, ip))).json();
+    expect(started.mode).toBe("demo");
+    const c = await evalPost(post("/api/eval", { action: "case", runId: started.runId, caseId: "MVP-01" }, ip));
+    expect(c.status).toBe(200);
+    expect((await evalPost(post("/api/eval", { action: "finish", runId: started.runId }, ip))).status).toBe(200);
   });
   it("POST /api/eval recovers when another instance holds the run", async () => {
     const res = await evalPost(post("/api/eval", { action: "case", runId: "6f1f3f5e-3c1a-4b7e-9a55-0d5a0a3a1b11", caseId: "MVP-02" }, "10.4.0.2"));

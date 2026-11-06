@@ -9,7 +9,6 @@ export interface Health {
   judge: boolean;
   quotaPausedUntil: string | null;
   storage: { mode: "redis" | "file" | "memory"; persistent: boolean };
-  adminTokenRequired: boolean;
   versions: { prompt: string; kb: string; policy: string };
 }
 

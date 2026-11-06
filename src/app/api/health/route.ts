@@ -20,7 +20,6 @@ export async function GET() {
     judge: live && judgeEnabled(),
     quotaPausedUntil: live ? await getCooldown() : null,
     storage: { mode: store.mode, persistent: store.persistent },
-    adminTokenRequired: Boolean(process.env.ADMIN_TOKEN),
     versions: VERSIONS,
   });
 }

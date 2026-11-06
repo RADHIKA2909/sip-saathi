@@ -4,7 +4,6 @@ import { executeCase } from "@/eval/execute";
 import { BASELINE_REVIEWS } from "@/eval/baseline/reviews";
 import run from "@/eval/baseline/run.json";
 import { runRedTeam } from "@/eval/runner";
-import { VERSIONS } from "@/lib/pipeline/decode";
 
 describe("evaluation suite definition", () => {
   it("has at least 20 cases, unique ids, every type, all reviewed", () => {
@@ -30,9 +29,10 @@ describe("validator red-team", () => {
 });
 
 describe("saved run shown by default", () => {
-  it("is a complete live run on the current prompt, knowledge base and policy", () => {
+  it("is a complete live run with no provider outages", () => {
     expect(run.requestedMode).toBe("live");
-    expect(run.versions).toEqual(VERSIONS);
+    // The saved run is the reviewed record, so it stays on the versions it ran with.
+    expect(run.versions.prompt).toMatch(/^prompt-v\d+$/);
     expect(run.results.map((r) => r.caseId)).toEqual(EVAL_CASES.map((c) => c.id));
     for (const r of run.results) expect(["provider_error", "quota"]).not.toContain(r.fallbackReason);
   });

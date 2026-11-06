@@ -5,7 +5,7 @@ import { recordEvent } from "@/lib/analytics/server";
 import { jsonError } from "@/lib/server/guard";
 import { rateLimit } from "@/lib/server/ratelimit";
 import { EVAL_CASES } from "@/eval/cases";
-import { addCaseResult, ensureRun, finishRun, getReviews, getRun, listRuns, startRun } from "@/eval/execute";
+import { addCaseResult, ensureRun, finishRun, getRun, listRuns, startRun } from "@/eval/execute";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -17,8 +17,7 @@ export async function GET(req: Request) {
     const run = await getRun(id);
     return run ? NextResponse.json(run) : jsonError("Run not found.", 404);
   }
-  const [runs, reviews] = await Promise.all([listRuns(), getReviews()]);
-  return NextResponse.json({ runs, reviews });
+  return NextResponse.json({ runs: await listRuns() });
 }
 
 const Body = z.discriminatedUnion("action", [

@@ -66,7 +66,7 @@ export default function About() {
           <li><strong>Input screen</strong>: personal identifiers removed; distress, prompt injection, fund-pick and prediction requests routed to preapproved responses without calling AI.</li>
           <li><strong>Classify and retrieve</strong>: a rule-based classifier picks a concern; up to four approved passages are selected deterministically.</li>
           <li><strong>Generate</strong> (live mode only): the model must answer only from those passages, citing them, as structured output.</li>
-          <li><strong>Validate</strong>: schema, citations (exist and were retrieved), numbers present in sources, lexical support estimate, and eight safety rules. Failure leads to a preapproved fallback.</li>
+          <li><strong>Validate</strong>: schema, citations (exist and were retrieved), numbers present in sources, lexical support estimate, and nine safety rules. Failure leads to a preapproved fallback.</li>
           <li><strong>Judge</strong> (optional): a separate AI review that can block but never approve. It is fallible.</li>
         </ol>
         <p className="mt-3 text-sm text-foreground/85">
@@ -79,7 +79,7 @@ export default function About() {
         <ul className="mt-3 list-disc space-y-1.5 pl-5 text-sm leading-relaxed text-foreground/85">
           <li>Safety rules are pattern-based. They can miss unsafe phrasing they weren&apos;t written for, and can over-block safe text (which only produces a fallback).</li>
           <li>The &ldquo;claims supported&rdquo; check measures word overlap with sources. It is not proof of factual accuracy.</li>
-          <li>The knowledge base is small (about 30 passages) and paraphrased by the developers. Passages should be re-checked against sources by a human reviewer.</li>
+          <li>The knowledge base is small (about 30 passages) and paraphrased by the developers. The project owner re-checked them against their sources on 7 November 2026, and sources can change after that date.</li>
           <li>Some sources (Mutual Funds Sahi Hai pages) don&apos;t show a publication date, and rules can change after the retrieval date.</li>
           <li>English only. Not tested with screen-reader users or real first-time investors.</li>
           <li>No account, portfolio, mandate or market integrations. Nothing here reflects anyone&apos;s real status.</li>

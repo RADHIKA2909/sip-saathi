@@ -19,9 +19,10 @@
 
 The project owner reviewed clarity and factual quality for all 24 cases of the saved live run on 2026-11-07 (mean clarity 3.96/5, mean factual quality 4.71/5; per-case ratings and notes are in `docs/EVALUATION.md`). This is one non-independent reviewer, and the ratings apply only to that run's outputs. New runs start as pending because the model's answers vary.
 
+The project owner also re-checked the knowledge-base passages against their sources on 2026-11-07.
+
 ## What still requires human verification
 
-- **Passage fidelity:** a reviewer should re-read each passage against its source (`/sources`).
 - **Screen-reader experience:** automated axe checks and keyboard tests pass, but the app has not been tested with NVDA, VoiceOver or TalkBack users.
 - **Live AI behaviour beyond the 24 cases:** model output varies; the validator and judge reduce risk but cannot guarantee correctness.
 

@@ -243,7 +243,7 @@ export const SPECIAL_RESPONSES: Record<Extract<FallbackReason, "distress" | "pro
       "It sounds like you may be going through something very hard. Your wellbeing matters more than any investment question. Please consider talking to someone you trust, or to a trained counsellor.",
     points: [
       {
-        text: "Tele MANAS, the Government of India's mental health helpline, is free and can be reached on 14416 or 1800-89-14416.",
+        text: "Tele MANAS, the Government of India's mental health helpline, can be reached on the toll-free number 1800-89-14416 or the short code 14416.",
         contentIds: ["mohfw-tele-manas"],
       },
     ],

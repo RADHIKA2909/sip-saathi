@@ -4,11 +4,23 @@ import { AlertCircle, CheckCircle2, ChevronDown, Download, FlaskConical, Play, S
 import { Badge, Button, Callout, Card, PageHeader, Stat, cx } from "@/components/ui";
 import { useHealth } from "@/lib/client/health";
 import { downloadEvaluation, type Review } from "@/lib/client/exportEval";
+import { BASELINE_FOLLOWUPS } from "@/eval/baseline/reviews";
 import { EVAL_CASES, type EvalCase } from "@/eval/cases";
 import type { CaseOutput, CaseResult, EvalRun, RedTeamResult } from "@/eval/runner";
 
 interface RunIndexEntry { id: string; requestedMode: "demo" | "live"; startedAt: string; finishedAt?: string; passed: number; total: number; model?: string }
-interface LabData { runs: RunIndexEntry[]; reviews: Record<string, Review> }
+interface LabData { runs: RunIndexEntry[] }
+
+const REVIEWS_KEY = "sip-saathi:eval-reviews";
+
+/** A visitor's reviews stay in their own browser, so nobody can change what other visitors see. */
+function readLocalReviews(): Record<string, Review> {
+  try {
+    return JSON.parse(localStorage.getItem(REVIEWS_KEY) ?? "{}") as Record<string, Review>;
+  } catch {
+    return {};
+  }
+}
 
 const CHECK_LABEL: Record<string, string> = {
   schema_valid: "Schema", safety_rules: "Safety rules", references_valid: "References", expected_behavior: "Expected behaviour", fallback_behavior: "Fallback", executed: "Executed",
@@ -22,7 +34,7 @@ export function EvalLab({ baseline, baselineReviews }: { baseline: EvalRun; base
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
-  const [token, setToken] = useState("");
+  const [localReviews, setLocalReviews] = useState<Record<string, Review>>({});
   const cancel = useRef(false);
 
   const load = useCallback(async () => {
@@ -34,10 +46,24 @@ export function EvalLab({ baseline, baselineReviews }: { baseline: EvalRun; base
     }
   }, []);
 
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => {
+    void load();
+    setLocalReviews(readLocalReviews());
+  }, [load]);
+
+  function saveReview(runId: string, caseId: string, review: Review) {
+    const next = { ...localReviews, [`${runId}|${caseId}`]: review };
+    setLocalReviews(next);
+    try {
+      localStorage.setItem(REVIEWS_KEY, JSON.stringify(next));
+      return true;
+    } catch {
+      return false;
+    }
+  }
 
   const reviewFor = (runId: string, caseId: string): Review | undefined =>
-    data?.reviews[`${runId}|${caseId}`] ?? (runId === baseline.id ? baselineReviews[caseId] : undefined);
+    localReviews[`${runId}|${caseId}`] ?? (runId === baseline.id ? baselineReviews[caseId] : undefined);
 
   async function exportRun() {
     setExporting(true);
@@ -162,9 +188,15 @@ export function EvalLab({ baseline, baselineReviews }: { baseline: EvalRun; base
           <Stat label="Cases passed" value={`${passed}/${run.results.length}`} />
           {Object.entries(byCheck).map(([id, v]) => <Stat key={id} label={CHECK_LABEL[id] ?? id} value={`${v.p}/${v.t}`} />)}
         </div>
+        {run.id === baseline.id && (
+          <Callout tone="accent" title="Fixed after this review">
+            <p>This run keeps its original answers as the reviewed record. The live product has since changed:</p>
+            <ul className="mt-1 list-disc space-y-1 pl-4">{BASELINE_FOLLOWUPS.map((f) => <li key={f}>{f}</li>)}</ul>
+          </Callout>
+        )}
         <Card className="p-0 sm:p-0">
           <ul className="divide-y divide-border">
-            {EVAL_CASES.map((c) => <CaseRow key={`${run.id}-${c.id}`} c={c} runId={run.id} result={run.results.find((r) => r.caseId === c.id)} review={reviewFor(run.id, c.id)} token={token} setToken={setToken} tokenRequired={Boolean(health?.adminTokenRequired)} onSaved={load} />)}
+            {EVAL_CASES.map((c) => <CaseRow key={`${run.id}-${c.id}`} c={c} result={run.results.find((r) => r.caseId === c.id)} review={reviewFor(run.id, c.id)} onSave={(r) => saveReview(run.id, c.id, r)} />)}
           </ul>
         </Card>
       </section>
@@ -208,21 +240,23 @@ function OutputView({ o }: { o: CaseOutput }) {
   );
 }
 
-function CaseRow({ c, runId, result, review, token, setToken, tokenRequired, onSaved }: { c: EvalCase; runId: string; result?: CaseResult; review?: Review; token: string; setToken: (t: string) => void; tokenRequired: boolean; onSaved: () => void }) {
+function CaseRow({ c, result, review, onSave }: { c: EvalCase; result?: CaseResult; review?: Review; onSave: (r: Review) => boolean }) {
   const [open, setOpen] = useState(false);
   const [clarity, setClarity] = useState<string>(review?.clarity ? String(review.clarity) : "");
   const [factual, setFactual] = useState<string>(review?.factualQuality ? String(review.factualQuality) : "");
   const [notes, setNotes] = useState(review?.notes ?? "");
   const [msg, setMsg] = useState<string | null>(null);
+  // Saved reviews load after the first render, so keep the fields in step with them.
+  useEffect(() => {
+    setClarity(review?.clarity ? String(review.clarity) : "");
+    setFactual(review?.factualQuality ? String(review.factualQuality) : "");
+    setNotes(review?.notes ?? "");
+  }, [review]);
   const input = c.kind === "decode" ? c.input.text : c.input.statements.join(" / ");
 
-  async function save() {
-    setMsg(null);
-    const res = await fetch("/api/eval/review", { method: "POST", headers: { "content-type": "application/json", ...(token ? { "x-admin-token": token } : {}) },
-      body: JSON.stringify({ runId, caseId: c.id, clarity: clarity ? Number(clarity) : null, factualQuality: factual ? Number(factual) : null, notes }) });
-    const j = await res.json().catch(() => ({}));
-    setMsg(res.ok ? "Saved." : (j as { error?: string }).error ?? "Couldn't save.");
-    if (res.ok) onSaved();
+  function save() {
+    const saved = onSave({ clarity: clarity ? Number(clarity) : null, factualQuality: factual ? Number(factual) : null, notes, reviewedAt: new Date().toISOString() });
+    setMsg(saved ? "Saved in this browser." : "Couldn't save in this browser.");
   }
 
   return (
@@ -267,13 +301,8 @@ function CaseRow({ c, runId, result, review, token, setToken, tokenRequired, onS
                 <input className="input mt-1" maxLength={500} value={notes} onChange={(e) => setNotes(e.target.value)} />
               </label>
             </div>
-            {tokenRequired && (
-              <label className="mt-3 block max-w-sm text-xs font-medium">Reviewer token
-                <input type="password" autoComplete="off" className="input mt-1" value={token} onChange={(e) => setToken(e.target.value)} />
-              </label>
-            )}
             <div className="mt-2 flex items-center gap-3">
-              <Button variant="secondary" onClick={() => void save()}>Save review</Button>
+              <Button variant="secondary" onClick={save}>Save review</Button>
               {msg && <span className="text-xs text-muted" role="status">{msg}</span>}
             </div>
           </fieldset>

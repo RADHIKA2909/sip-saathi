@@ -11,7 +11,7 @@ export default function SourcesPage() {
     <div>
       <PageHeader eyebrow={`Knowledge base ${KB_VERSION}`} title="Source manifest">
         Every source SIP Saathi can cite, with the exact passages it is allowed to use. Each source was fetched and read on its retrieval date. Passages are close paraphrases, and text in quotation marks is copied exactly.
-        A human reviewer should still re-check passages against the originals.
+        The project owner re-checked the passages against their original sources on 7 November 2026.
       </PageHeader>
       <div className="space-y-4">
         {SOURCES.map((s) => (

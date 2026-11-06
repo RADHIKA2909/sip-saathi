@@ -1,4 +1,5 @@
 "use client";
+import { BASELINE_FOLLOWUPS } from "@/eval/baseline/reviews";
 import { EVAL_CASES } from "@/eval/cases";
 import type { CaseOutput, CaseResult, EvalRun } from "@/eval/runner";
 
@@ -69,6 +70,7 @@ export async function buildEvaluationWorkbook(run: EvalRun, reviewFor: (caseId: 
     ["Suite", run.suite],
     ["Versions", Object.values(run.versions).filter(Boolean).join(", ")],
     ["Red-team drafts blocked as expected", `${(run.redTeam ?? []).filter((r) => r.blocked && r.expectedFailuresCaught).length}/${(run.redTeam ?? []).length}`],
+    ...(run.id === "baseline" ? ([["Fixed after this review (answers here are the original ones)", BASELINE_FOLLOWUPS.join("\n")]] as [string, string][]) : []),
     ["Clarity scale", "1 = hard for a first-time investor to follow; 5 = plain language, no unexplained jargon"],
     ["Factual quality scale", "1 = contains errors or unsupported claims; 5 = every statement matches its cited source"],
     ["Scope", "24 developer-written cases. Separate from the discovery classifier evaluation. Passing automated checks does not show usefulness to real investors."],

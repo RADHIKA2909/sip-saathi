@@ -92,19 +92,3 @@ export async function finishRun(runId: string): Promise<EvalRun | null> {
 export async function listRuns(): Promise<RunIndexEntry[]> {
   return (await getStore().getJSON<RunIndexEntry[]>(KEYS.evalRuns)) ?? [];
 }
-
-export interface HumanReview {
-  clarity: number | null;
-  factualQuality: number | null;
-  notes: string;
-  reviewedAt: string;
-}
-
-export async function getReviews(): Promise<Record<string, HumanReview>> {
-  return getStore().hgetall<HumanReview>(KEYS.evalReviews);
-}
-
-/** Reviews belong to one run: a rating describes that run's output, not the case in general. */
-export async function saveReview(runId: string, caseId: string, review: HumanReview): Promise<void> {
-  await getStore().hset(KEYS.evalReviews, { [`${runId}|${caseId}`]: review });
-}
