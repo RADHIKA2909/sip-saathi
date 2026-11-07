@@ -3,6 +3,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
+import { Logo } from "./Logo";
 import { ModeBadge } from "./ModeBadge";
 import { cx } from "./ui";
 
@@ -34,11 +35,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </a>
       <header className="sticky top-0 z-40 border-b border-border bg-surface/90 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4 sm:px-6">
-          <Link href="/" className="flex items-center gap-2 font-semibold tracking-tight" aria-label="SIP Saathi home">
-            <span aria-hidden="true" className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-[#12b383] to-[#00795a] text-sm font-bold text-white">
-              S
-            </span>
-            <span>SIP Saathi</span>
+          <Link href="/" className="flex items-center" aria-label="SIP Saathi home">
+            <Logo />
           </Link>
           <div className="flex items-center gap-2">
             <ModeBadge />

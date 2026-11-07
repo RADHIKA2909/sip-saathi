@@ -1,14 +1,14 @@
 import Link from "next/link";
-import { ArrowRight, Lock, ShieldCheck, BookOpenCheck, UserX, PlayCircle, FlaskConical } from "lucide-react";
+import { Activity, ArrowRight, ClipboardList, CreditCard, Lock, MessagesSquare, Route, Scale, ShieldCheck, BookOpenCheck, UserX, PlayCircle, FlaskConical } from "lucide-react";
 import { ButtonLink, Card } from "@/components/ui";
 
 const FEATURES = [
-  { href: "/concern", title: "Concern Decoder", body: "Describe what worries you. Get a plain-language explanation grounded in SEBI and AMFI education material." },
-  { href: "/journey", title: "SIP Journey Mirror", body: "See what you have contributed and how consistent your instalments have been. No invented returns." },
-  { href: "/market", title: "Market Context", body: "Contribution, market value, gain or loss, volatility and time horizon, explained with your own numbers." },
-  { href: "/advice", title: "Conflicting Advice Decoder", body: "Paste what you heard. See which parts are checkable facts, opinions, assumptions or unsupported claims." },
-  { href: "/payment", title: "Payment Help", body: "A failed instalment, a paused mandate and a stopped SIP are different things. Learn which is which." },
-  { href: "/canvas", title: "Decision Clarity Canvas", body: "Bring it together: what you know, what is missing, and questions to reflect on. No recommendation." },
+  { href: "/concern", icon: MessagesSquare, title: "Concern Decoder", body: "Describe what worries you. Get a plain-language explanation grounded in SEBI and AMFI education material." },
+  { href: "/journey", icon: Route, title: "SIP Journey Mirror", body: "See what you have contributed and how consistent your instalments have been. No invented returns." },
+  { href: "/market", icon: Activity, title: "Market Context", body: "Contribution, market value, gain or loss, volatility and time horizon, explained with your own numbers." },
+  { href: "/advice", icon: Scale, title: "Conflicting Advice Decoder", body: "Paste what you heard. See which parts are checkable facts, opinions, assumptions or unsupported claims." },
+  { href: "/payment", icon: CreditCard, title: "Payment Help", body: "A failed instalment, a paused mandate and a stopped SIP are different things. Learn which is which." },
+  { href: "/canvas", icon: ClipboardList, title: "Decision Clarity Canvas", body: "Bring it together: what you know, what is missing, and questions to reflect on. No recommendation." },
 ];
 
 export default function Home() {
@@ -50,12 +50,17 @@ export default function Home() {
       <section aria-labelledby="explore">
         <h2 id="explore" className="mb-4 text-lg font-semibold tracking-tight">Explore</h2>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {FEATURES.map((f) => (
-            <Link key={f.href} href={f.href} className="group rounded-2xl border border-border bg-surface p-5 transition-shadow hover:shadow-md">
-              <p className="flex items-center justify-between font-semibold">
-                {f.title} <ArrowRight size={16} className="text-muted transition-transform group-hover:translate-x-0.5" aria-hidden />
-              </p>
-              <p className="mt-1.5 text-sm leading-relaxed text-muted">{f.body}</p>
+          {FEATURES.map(({ icon: Icon, ...f }) => (
+            <Link key={f.href} href={f.href} className="group flex gap-3.5 rounded-2xl border border-border bg-surface p-5 transition-shadow hover:shadow-md">
+              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-accent-soft text-accent-strong" aria-hidden>
+                <Icon size={20} />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="flex items-center justify-between font-semibold">
+                  {f.title} <ArrowRight size={16} className="text-muted transition-transform group-hover:translate-x-0.5" aria-hidden />
+                </span>
+                <span className="mt-1.5 block text-sm leading-relaxed text-muted">{f.body}</span>
+              </span>
             </Link>
           ))}
         </div>
