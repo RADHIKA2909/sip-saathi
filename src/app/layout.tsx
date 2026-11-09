@@ -6,7 +6,7 @@ import { AppShell } from "@/components/AppShell";
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
 
 export const metadata: Metadata = {
-  title: { default: "SIP Saathi — Your SIP journey, made clearer", template: "%s · SIP Saathi" },
+  title: { default: "SIP Saathi, Your SIP journey, made clearer", template: "%s · SIP Saathi" },
   description:
     "An independent educational prototype that helps first-time SIP investors understand returns, contributions, conflicting advice and payment issues. Not investment advice. Not affiliated with any investment platform.",
 };
